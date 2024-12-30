@@ -41,17 +41,75 @@ export class CommentsService {
     videoId: string,
     sort: "top" | "newest",
     pageSize = 10,
-    pageToken?: string
+    pageToken?: string,
+    includeReplies = false
   ) {
     let query: string;
+    const params: any[] = [videoId];
+
     if (sort === "newest") {
-      query = `SELECT * FROM comments WHERE video_id = ? LIMIT ?`;
+      query = `SELECT * FROM comments WHERE video_id = ?`;
     } else {
-      query = `SELECT * FROM top_comments WHERE video_id = ? LIMIT ?`;
+      query = `SELECT * FROM top_comments WHERE video_id = ?`;
     }
+
+    // Add pagination logic using pageToken
+    if (pageToken) {
+      query += ` AND id > ?`; // Assuming `id` is your unique identifier for comments
+      params.push(pageToken);
+    }
+
+    query += ` LIMIT ?`;
+    params.push(pageSize);
+
     const result = await this.scyllaDbService
       .getClient()
-      .execute(query, [videoId, pageSize]);
-    return result.rows;
+      .execute(query, params);
+
+    // Fetch replies if requested
+    if (includeReplies) {
+      for (const comment of result.rows) {
+        const repliesResult = await this.getReplies(comment.id, 5); // Fetch 5 replies per comment
+        comment.replies = repliesResult.replies;
+      }
+    }
+    // Determine the next page token (if more rows exist)
+    const nextPageToken =
+      result.rows.length === pageSize
+        ? result.rows[result.rows.length - 1].id
+        : null;
+
+    return {
+      comments: result.rows,
+      nextPageToken,
+    };
+  }
+  async getReplies(commentId: string, pageSize = 10, pageToken?: string) {
+    let query = `SELECT * FROM comments WHERE parent_id = ?`;
+    const params: any[] = [commentId];
+
+    // Handle pagination
+    if (pageToken) {
+      query += ` AND id > ?`;
+      params.push(pageToken);
+    }
+
+    query += ` LIMIT ?`;
+    params.push(pageSize);
+
+    const result = await this.scyllaDbService
+      .getClient()
+      .execute(query, params);
+
+    // Determine next page token
+    const nextPageToken =
+      result.rows.length === pageSize
+        ? result.rows[result.rows.length - 1].id
+        : null;
+
+    return {
+      replies: result.rows,
+      nextPageToken,
+    };
   }
 }

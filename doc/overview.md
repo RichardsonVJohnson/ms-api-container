@@ -119,3 +119,74 @@ This implementation ensures:
 	1.	Scalability: The ScyllaDB schema supports high write throughput and efficient querying.
 	2.	Simplicity: Minimal boilerplate and intuitive APIs for the use cases.
 	3.	Extensibility: Additional features like user notifications or analytics can be added easily.
+
+	///////////CHANGE REQUEST////////////
+	To retrieve replies to comments, the system must support hierarchical or nested data structures. Each reply needs to be associated with a parent comment. Here’s a detailed plan to support replies and retrieve them effectively:
+
+Requirements
+	1.	Database Schema Changes:
+	•	Add a parent_id column to the comments table.
+	•	If parent_id is NULL, it indicates a top-level comment.
+	•	If parent_id contains a value, it represents a reply to the comment identified by that parent_id.
+	2.	API Changes:
+	•	Add an endpoint or extend the getComments function to retrieve replies for a specific comment.
+	•	Include replies in the response for top-level comments if requested.
+	3.	Frontend Considerations:
+	•	Ensure the UI supports displaying nested replies.
+	•	Implement lazy loading for replies to avoid loading large nested structures unnecessarily.
+
+Database Schema Example
+
+CREATE TABLE comments (
+  id UUID PRIMARY KEY,
+  video_id UUID NOT NULL,
+  parent_id UUID NULL, -- Null for top-level comments
+  text TEXT NOT NULL,
+  created_at TIMESTAMP NOT NULL
+);
+
+Retrieving Replies
+
+Here’s how you can retrieve replies for a specific comment.
+
+Changes for Supporting Replies
+	1.	Schema Addition:
+	•	Add parent_id to the comments table.
+	2.	Frontend Changes:
+	•	Allow users to view and post replies to a specific comment.
+	•	Display nested replies as a tree structure or indented list.
+	•	Implement lazy loading for large comment threads.
+	3.	API Enhancements:
+	•	Include a separate getReplies function for on-demand fetching.
+	•	Optionally include replies within getComments.
+	4.	Performance Considerations:
+	•	Implement caching for frequently accessed comments and replies.
+	•	Limit reply depth (e.g., maximum nesting level) to avoid excessive data fetching.
+	5.	Testing:
+	•	Unit and integration tests for retrieving replies and nested comments.
+	•	Test edge cases like:
+	•	Comments with no replies.
+	•	Deeply nested replies exceeding limits.
+	•	Invalid parent IDs.
+
+Example Usage
+
+Fetching Top-Level Comments
+
+const comments = await getComments("video123", "newest", 10, undefined, true);
+console.log(comments);
+
+Fetching Replies for a Specific Comment
+
+const replies = await getReplies("comment456", 5);
+console.log(replies);
+
+Frontend Display Example
+	1.	Top-Level Comments:
+	•	Display in a list.
+	•	Include a “View Replies” button.
+	2.	Replies:
+	•	Lazy-load replies when “View Replies” is clicked.
+	•	Nest replies beneath their parent comments.
+
+By implementing this approach, you can effectively support and retrieve replies while maintaining scalability and performance.
