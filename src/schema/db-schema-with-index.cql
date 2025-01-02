@@ -15,6 +15,8 @@ CREATE TABLE youtube_comments.comments (
     PRIMARY KEY ((video_id), created_at, comment_id)
 ) WITH CLUSTERING ORDER BY (created_at DESC);
 
+-- CREATE INDEX ON comments (parent_comment_id);
+
 -- Top Comments Ranking Table
 CREATE TABLE youtube_comments.top_comments (
     video_id UUID,

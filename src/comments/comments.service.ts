@@ -85,7 +85,7 @@ export class CommentsService {
     };
   }
   async getReplies(commentId: string, pageSize = 10, pageToken?: string) {
-    let query = `SELECT * FROM comments WHERE parent_id = ?`;
+    let query = `SELECT * FROM replies WHERE parent_comment_id = ?`;
     const params: any[] = [commentId];
 
     // Handle pagination

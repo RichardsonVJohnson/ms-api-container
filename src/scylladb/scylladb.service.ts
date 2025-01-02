@@ -10,7 +10,7 @@ export class ScyllaDbService implements OnModuleInit, OnModuleDestroy {
     const options: ClientOptions = {
       contactPoints: ["127.0.0.1"], // Replace with your ScyllaDB cluster IPs
       localDataCenter: "datacenter1", // Replace with your data center name
-      keyspace: "your_keyspace", // Replace with your keyspace
+      keyspace: "youtube_comments", // Replace with your keyspace
       credentials: { username: "your_username", password: "your_password" }, // Optional, only if authentication is enabled
     };
 
